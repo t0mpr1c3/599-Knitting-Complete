@@ -1,3 +1,4 @@
+
 """A method for visualizing KnitGraphs as a graph structure, mostly for debugging"""
 from pyvis import network as nw
 
@@ -52,7 +53,13 @@ def visualize_knitGraph(knit_graph: Knit_Graph, display_name: str = "nx.html", h
 
     for yarn in knit_graph.yarns.values():
         for prior_node, next_node in yarn.yarn_graph.edges:
-            network.add_edge(prior_node, next_node, arrow="middle", physics=True, color="red")
+            if yarn.yarn_id == "mc" or yarn.yarn_id == "yarn":
+                col = "red"
+            elif yarn.yarn_id == "cc" or yarn.yarn_id == "cc1":
+                col = "orange"
+            else:
+                col = "yellow"
+            network.add_edge(prior_node, next_node, arrow="middle", physics=True, color=col, width=2)
 
     for parent_id, child_id in knit_graph.graph.edges:
         direction = knit_graph.graph[parent_id][child_id]["pull_direction"]

@@ -249,6 +249,7 @@ class Knitout_Generator:
         This is not a completely general method and does not guarantee stacking order of our decreases
         A more advanced method can be found at:
         https://textiles-lab.github.io/posts/2018/02/07/lace-transfers/
+
         This would require some changes to the code structure and is not recommended for assignment 2.
         :param parent_loops_to_needles: parent loops mapped to their current needle
         :param decrease_offsets: the offsets of parent loops to create decreases

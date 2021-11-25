@@ -1,3 +1,4 @@
+
 """Simple knitgraph generators used primarily for debugging"""
 from knit_graphs.Knit_Graph import Knit_Graph, Pull_Direction
 from knit_graphs.Yarn import Yarn
@@ -27,6 +28,225 @@ def stockinette(width: int = 4, height: int = 4, carrier:int=3) -> Knit_Graph:
             next_row.append(child_id)
             knitGraph.add_loop(child)
             knitGraph.connect_loops(parent_id, child_id)
+        prior_row = next_row
+
+    return knitGraph
+
+
+def standard(width: int = 6, height: int = 4, carrier = [3, 4]) -> Knit_Graph:
+    """
+    :param carrier:
+    :param width: the number of stitches of the swatch
+    :param height:  the number of courses of the swatch
+    :return: a knitgraph of fairisle with 2-stitch stripes in 2 alternating yarns, plus 2 starter rows of stockinette in MC
+    """
+    assert width > 0
+    assert height > 0
+
+    knitGraph = Knit_Graph()
+    mc = Yarn("mc", knitGraph, carrier_id=carrier[0])
+    cc = Yarn("cc", knitGraph, carrier_id=carrier[1])
+    first_starter_row = []
+    knitGraph.add_yarn(mc)
+    for _ in range(0, width):
+        loop_id, loop = mc.add_loop_to_end()
+        first_starter_row.append(loop_id)
+        knitGraph.add_loop(loop)
+
+    second_starter_row = []
+    for parent_id in reversed(first_starter_row):
+        child_id, child = mc.add_loop_to_end()
+        second_starter_row.append(child_id)
+        knitGraph.add_loop(child)
+        knitGraph.connect_loops(parent_id, child_id)
+
+    first_row = []
+    knitGraph.add_yarn(cc)
+    col = 0
+    for parent_id in reversed(second_starter_row):
+        if col % 4 < 2:
+            child_id, child = cc.add_loop_to_end(col + 2 * width)
+        else:
+            child_id, child = mc.add_loop_to_end(col + 2 * width)
+        first_row.append(child_id)
+        knitGraph.add_loop(child)
+        knitGraph.connect_loops(parent_id, child_id)
+        col += 1
+
+    prior_row = first_row
+    for _ in range(1, height):
+        next_row = []
+        for parent_id in reversed(prior_row):
+            for yarn in [mc, cc]:
+                if yarn.yarn_graph.has_node(parent_id):
+                    child_id, child = yarn.add_loop_to_end()
+            next_row.append(child_id)
+            knitGraph.add_loop(child)
+            knitGraph.connect_loops(parent_id, child_id)
+        prior_row = next_row
+
+    return knitGraph
+
+
+def jacquard(width: int = 6, height: int = 4, carrier = [3, 4]) -> Knit_Graph:
+    """
+    :param carrier:
+    :param width: the number of stitches of the swatch
+    :param height:  the number of courses of the swatch
+    :return: a knitgraph of jacquard in 2-stitch stripes in 2 alternating yarns, plus one starter row double knit in MC
+    """
+    assert width > 0
+    assert height > 0
+
+    knitGraph = Knit_Graph()
+    mc = Yarn("mc", knitGraph, carrier_id=carrier[0])
+    cc = Yarn("cc", knitGraph, carrier_id=carrier[1])
+    starter_row = []
+    knitGraph.add_yarn(mc)
+    for col in range(0, 2 * width):
+        if col < width:
+            id = 2 * col
+        else:
+            id = 2 * (2 * width - col) - 1
+        loop_id, loop = mc.add_loop_to_end(id)
+        starter_row.append(loop_id)
+        knitGraph.add_loop(loop)
+
+    reordered_starter_row = starter_row[:]
+    for col in range(0, width):
+        reordered_starter_row[2 * col] = starter_row[col]
+        reordered_starter_row[1 + 2 * col] = starter_row[2 * width - col - 1]
+
+    knitGraph.add_yarn(cc)
+    prior_row = reordered_starter_row
+    for row in range(1, 1 + height):
+        next_row = []
+        for col in range(0, width):
+            if col % 4 < 2:
+                child_id_front, child_front = cc.add_loop_to_end(2 * (col + width * row))
+                child_id_back, child_back = mc.add_loop_to_end(1 + 2 * (col + width * row))
+            else:
+                child_id_front, child_front = mc.add_loop_to_end(2 * (col + width * row))
+                child_id_back, child_back = cc.add_loop_to_end(1 + 2 * (col + width * row))
+            next_row.append(child_id_front)
+            knitGraph.add_loop(child_front)
+            knitGraph.connect_loops(prior_row[2 * col], child_id_front)
+            next_row.append(child_id_back)
+            knitGraph.add_loop(child_back)
+            knitGraph.connect_loops(prior_row[2 * col + 1], child_id_back)
+        prior_row = next_row
+
+    return knitGraph
+
+
+def birdseye(width: int = 8, height: int = 4, carrier = [3, 4]) -> Knit_Graph:
+    """
+    :param carrier:
+    :param width: the number of stitches of the swatch
+    :param height:  the number of courses of the swatch
+    :return: a knitgraph of birdseye in 4-stitch stripes in 2 alternating yarns, plus one starter row double knit in MC
+    """
+    assert width > 0
+    assert height > 0
+
+    knitGraph = Knit_Graph()
+    mc = Yarn("mc", knitGraph, carrier_id=carrier[0])
+    cc = Yarn("cc", knitGraph, carrier_id=carrier[1])
+    starter_row = []
+    knitGraph.add_yarn(mc)
+    for col in range(0, 2 * width):
+        if col < width:
+            id = 2 * col
+        else:
+            id = 2 * (2 * width - col) - 1
+        loop_id, loop = mc.add_loop_to_end(id)
+        starter_row.append(loop_id)
+        knitGraph.add_loop(loop)
+
+    reordered_starter_row = starter_row[:]
+    for col in range(0, width):
+        reordered_starter_row[2 * col] = starter_row[col]
+        reordered_starter_row[1 + 2 * col] = starter_row[2 * width - col - 1]
+
+    knitGraph.add_yarn(cc)
+    prior_row = reordered_starter_row
+    for row in range(1, 1 + height):
+        next_row = []
+        for col in range(0, width):
+            if col % 2 == row % 2:
+                child_id_back, child_back = mc.add_loop_to_end(1 + 2 * (col + width * row))
+            else:
+                child_id_back, child_back = cc.add_loop_to_end(1 + 2 * (col + width * row))
+            if col % 8 < 4:
+                child_id_front, child_front = cc.add_loop_to_end(2 * (col + width * row))
+            else:
+                child_id_front, child_front = mc.add_loop_to_end(2 * (col + width * row))
+            next_row.append(child_id_front)
+            knitGraph.add_loop(child_front)
+            knitGraph.connect_loops(prior_row[2 * col], child_id_front)
+            next_row.append(child_id_back)
+            knitGraph.add_loop(child_back)
+            knitGraph.connect_loops(prior_row[2 * col + 1], child_id_back)
+        prior_row = next_row
+
+    return knitGraph
+
+
+def birdseye_3(width: int = 6, height: int = 4, carrier = [3, 4, 5]) -> Knit_Graph:
+    """
+    :param carrier:
+    :param width: the number of stitches of the swatch
+    :param height:  the number of courses of the swatch
+    :return: a knitgraph of birdseye in 2-stitch stripes in 3 alternating yarns, plus one starter row double knit in MC
+    """
+    assert width > 0
+    assert height > 0
+
+    knitGraph = Knit_Graph()
+    mc = Yarn("mc", knitGraph, carrier_id=carrier[0])
+    cc1 = Yarn("cc1", knitGraph, carrier_id=carrier[1])
+    cc2 = Yarn("cc2", knitGraph, carrier_id=carrier[2])
+    # yarn = [mc, cc1, cc2]
+    starter_row = []
+    knitGraph.add_yarn(mc)
+    for col in range(0, 2 * width):
+        if col < width:
+            id = 2 * col
+        else:
+            id = 2 * (2 * width - col) - 1
+        loop_id, loop = mc.add_loop_to_end(id)
+        starter_row.append(loop_id)
+        knitGraph.add_loop(loop)
+
+    reordered_starter_row = starter_row[:]
+    for col in range(0, width):
+        reordered_starter_row[2 * col] = starter_row[col]
+        reordered_starter_row[1 + 2 * col] = starter_row[2 * width - col - 1]
+
+    knitGraph.add_yarn(cc1)
+    knitGraph.add_yarn(cc2)
+    prior_row = reordered_starter_row
+    for row in range(1, 1 + height):
+        next_row = []
+        for col in range(0, width):
+            if (width - col + row) % 3 == 0:
+                child_id_back, child_back = mc.add_loop_to_end(1 + 2 * (col + width * row))
+            elif (width - col + row) % 3 == 1:
+                child_id_back, child_back = cc2.add_loop_to_end(1 + 2 * (col + width * row))
+            else:
+                child_id_back, child_back = cc1.add_loop_to_end(1 + 2 * (col + width * row))
+            if col % 6 < 2:
+                child_id_front, child_front = cc1.add_loop_to_end(2 * (col + width * row))
+            elif col % 6 > 3:
+                child_id_front, child_front = cc2.add_loop_to_end(2 * (col + width * row))
+            else:
+                child_id_front, child_front = mc.add_loop_to_end(2 * (col + width * row))
+            next_row.append(child_id_front)
+            knitGraph.add_loop(child_front)
+            knitGraph.connect_loops(prior_row[2 * col], child_id_front)
+            next_row.append(child_id_back)
+            knitGraph.add_loop(child_back)
+            knitGraph.connect_loops(prior_row[2 * col + 1], child_id_back)
         prior_row = next_row
 
     return knitGraph

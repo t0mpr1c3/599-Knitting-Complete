@@ -23,12 +23,32 @@ def test_lace():
     visualize_knitGraph(lace(4, 4))
 
 
+def test_standard():
+    visualize_knitGraph(standard(6, 4))
+
+
+def test_jacquard():
+    visualize_knitGraph(jacquard(6, 4))
+
+
+def test_birdseye():
+    visualize_knitGraph(birdseye(8, 4))
+
+
+def test_birdseye_3():
+    visualize_knitGraph(birdseye_3(6, 4))
+
+
 if __name__ == "__main__":
-    test_stockinette()
-    test_rib()
-    test_seed()
-    test_twisted_stripes()
-    test_lace()
+    # test_stockinette()
+    # test_rib()
+    # test_seed()
+    # test_twisted_stripes()
+    # test_lace()
+    # test_standard()
+    # test_jacquard()
+    # test_birdseye()
+    test_birdseye_3()
 
 
 def test_short_rows():
